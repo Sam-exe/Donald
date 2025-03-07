@@ -10,7 +10,7 @@ var blackColors = new Array(
 var highlightQuadrant = true;
 var testCounter;
 var tutorialStep = 0; // Step counter for the tutorial
-var showTutorial = false; // Default: Show the tutorial
+var showTutorial = true; // Default: Show the tutorial
 var showFrames = true;
 var showPhaseText = false;
 function setup() {
@@ -20,7 +20,10 @@ function setup() {
   stroke(0);
   testCounter = 0;
   print("Hello Donad_2021");
-
+  topLeftImage = loadImage("topLeft.png");
+  topRightImage = loadImage("topRight.png");
+  bottomLeftImage = loadImage("bottomLeft.png");
+  bottomRightImage = loadImage("bottomRight.png");
   // Start with the tutorial if enabled, otherwise go to idle state
   if (showTutorial) {
     activityState = 8; // Tutorial state

@@ -150,16 +150,16 @@ function showTestStep(index) {
     // Highlight based on the index
     switch (index) {
       case 0: // Top-Left Quadrant
-        rect(0, 0, w, h);
+        image(topLeftImage, 0, 0, w, h);
         break;
       case 1: // Bottom-Left Quadrant
-        rect(0, h, w, h);
+        image(topRightImage, 0, h, w, h);
         break;
       case 2: // Bottom-Right Quadrant
-        rect(w, h, w, h);
+        image(bottomLeftImage, w, h, w, h);
         break;
       case 3: // Top-Right Quadrant
-        rect(w, 0, w, h);
+        image(bottomRightImage, w, 0, w, h);
         break;
       default:
         console.error("Invalid button index:", index);
