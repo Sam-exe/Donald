@@ -1,0 +1,389 @@
+// Global variables
+var showTutorial = true; // Default: Show the tutorial
+var highlightQuadrant = true;
+var useSound = false; // Toggle for using sounds
+var id = 'TESTID1';
+
+// Timing variables
+var T0_IDLE = 20; // one idle step
+var T1_WARN = 120;
+var T2_SHOWTEST = 40; // one test step
+var T3_DECAY = 120;
+var T4_COUNTDOWN = 360;
+var T5_TIMEOUT = 120;
+var T6_CORRECT = 120;
+var T7_INCORRECT = 120;
+var prepair = true;
+// Images and sounds for quadrants
+var topLeftImage, topRightImage, bottomLeftImage, bottomRightImage;
+var topLeftSound, topRightSound, bottomLeftSound, bottomRightSound;
+var synth;
+var randomValue;
+
+function preload() {
+
+  synth = new p5.PolySynth();
+  userStartAudio();
+  
+  randomValue = random(1); // Generate a random number between 0 and 1
+  if (randomValue < 1 / 3.0) {
+    showTutorial = true;
+    highlightQuadrant = false;
+    useSound = false;
+    id = "team10-showTutorial"; // Generate test ID for showTutorial
+  } else if (randomValue < 2 / 3.0) {
+    showTutorial = false;
+    highlightQuadrant = true;
+    useSound = false;
+    id = "team10-highlightQuadrant"; // Generate test ID for highlightQuadrant
+  } else {
+    showTutorial = false;
+    highlightQuadrant = false;
+    useSound = true;
+    id = "team10-useSound"; // Generate test ID for useSound
+  }
+  
+  console.log("Test ID: " + id); // Print the test ID for debugging
+  // Preload images and sounds
+}
+function drawTrianglesPattern(x, y, w, h, bgColor) {
+  fill(bgColor);
+  rect(x, y, w, h); // Draw the background
+
+  fill(255); // White triangles
+  noStroke();
+  let step = 20; // Size of each triangle
+  for (let i = x; i < x + w; i += step) {
+    for (let j = y; j < y + h; j += step) {
+      triangle(i, j, i + step / 2, j + step, i + step, j); // Draw a triangle
+    }
+  }
+}
+
+function drawLinesPattern(x, y, w, h, bgColor) {
+  fill(bgColor);
+  rect(x, y, w, h); // Draw the background
+
+  stroke(255); // White lines
+  strokeWeight(2);
+  for (let i = y; i < y + h; i += 10) {
+    line(x, i, x + w, i); // Draw horizontal lines
+  }
+}
+
+function drawSquaresPattern(x, y, w, h, bgColor) {
+  fill(bgColor);
+  rect(x, y, w, h); // Draw the background
+
+  fill(255); // White squares
+  noStroke();
+  let step = 20; // Size of each square
+  for (let i = x; i < x + w; i += step) {
+    for (let j = y; j < y + h; j += step) {
+      rect(i, j, step / 2, step / 2); // Draw a square
+    }
+  }
+}
+
+function drawCirclesPattern(x, y, w, h, bgColor) {
+  fill(bgColor);
+  rect(x, y, w, h); // Draw the background
+
+  fill(255); // White circles
+  noStroke();
+  let step = 20; // Size of each circle
+  for (let i = x; i < x + w; i += step) {
+    for (let j = y; j < y + h; j += step) {
+      ellipse(i + step / 4, j + step / 4, step / 2); // Draw a circle
+    }
+  }
+}
+
+
+// Idle colors
+var idleColors = new Array(
+  180, // single digit grey scale
+  'white', // named color
+  '#fae', // three digit hex
+  '#222222', // six digit hex
+  'rgb(10,255,0)', // integer rgb value
+  'rgba(0,255,0,0.25)', // integer rgba value
+  'rgb(100%, 0%, 10%)', // percentage rgb notation
+  'rgba(100%, 0%, 100%, 0.2)', // percentage rgb notation
+  'grey',
+  'blue',
+  'pink',
+  'green',
+  'teal'
+);
+
+function showIdle() {
+  if (testCounter === 0 && showTutorial) {
+    handleTutorial(); // Trigger the tutorial
+    return; // Exit the function to avoid running the idle animation
+  }
+
+  if (frameCount % T0_IDLE == 0) {
+    showButtons();
+    showLeds(idleColors);
+    idleColors.rotateRight(-1);
+  }
+}
+
+
+function showTestStep(index) {
+  background(10);
+  showButtons();
+  
+  // Highlight the button corresponding to the current index if highlighting is enabled
+  if (highlightQuadrant) {
+    
+    push();
+    noStroke();
+    fill('rgba(192, 192, 192, 0.5)')
+    // Display the quadrant with a pattern
+    switch (index) {
+      case 0: // Top-Left Quadrant
+        drawTrianglesPattern(0, 0, width / 2, height / 2, "red");
+        break;
+      case 1: // Bottom-Left Quadrant
+        drawLinesPattern(0, height / 2, width / 2, height / 2, "blue");
+        break;
+      case 2: // Bottom-Right Quadrant
+        drawSquaresPattern(width / 2, height / 2, width / 2, height / 2, "green");
+        break;
+      case 3: // Top-Right Quadrant
+        drawCirclesPattern(width / 2, 0, width / 2, height / 2, "yellow");
+        break;
+      default:
+        console.error("Invalid index: " + index);
+        break;
+    }
+    pop();
+    
+    
+  }
+
+  // Play sounds if enabled
+  if (useSound) {
+    switch (index) {
+      case 0: // Top-Left Quadrant
+        synth.play("C4", 0.5, 0, T2_SHOWTEST / 120); // Play C4 for the LED duration
+        break;
+      case 1: // Bottom-Left Quadrant
+        synth.play("E4", 0.5, 0, T2_SHOWTEST / 120); // Play E4 for the LED duration
+        break;
+      case 2: // Bottom-Right Quadrant
+        synth.play("G4", 0.5, 0, T2_SHOWTEST / 120); // Play G4 for the LED duration
+        break;
+      case 3: // Top-Right Quadrant
+        synth.play("B4", 0.5, 0, T2_SHOWTEST / 120); // Play B4 for the LED duration
+        break;
+      default:
+        console.error("Invalid index: " + index);
+        break;
+    }
+  }
+  blokColors.rotateRight(-3 * index); // Rotate to the proper position
+  showLeds(blokColors); // Light up the LEDs
+  blokColors.rotateRight(3 * index); // Rotate back for the next block
+}
+
+var timeoutColors = new Array(
+  'orange', // named color
+  'yellow', // named color
+  'orange', // named color
+  'yellow', // named color
+  'orange', // named color
+  'yellow', // named color
+  'orange', // named color
+  'yellow', // named color
+  'orange', // named color
+  'yellow', // named color
+  'orange', // named color
+  'yellow' // named color
+  );
+
+function showTimeout() {
+  if (frameCount % (T5_TIMEOUT / 12) == 0) {
+    showButtons();
+    showLeds(timeoutColors);
+    timeoutColors.rotateRight(-1);
+  }
+}
+// Prepare colors
+var prepColors = new Array(
+  'pink', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black' // named color
+);
+
+function showPrepare() {
+  if (prepair){
+  changeState(0);
+  prepair = false;
+  }
+  if (frameCount % (T1_WARN / 12) == 0) {
+    showButtons();
+    showLeds(prepColors);
+    prepColors.rotateRight(1);
+  }
+}
+
+// Decay colors
+var decayColors = new Array(
+  'blue', // named color
+  'blue', // named color
+  'blue', // named color
+  'blue', // named color
+  'blue', // named color
+  'blue', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black' // named color
+);
+
+function showDecay() {
+  if (frameCount % (T3_DECAY / 12) == 0) {
+    showLeds(decayColors);
+    decayColors.rotateRight(3);
+  }
+}
+
+var successColors = new Array(
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green', // named color
+  'green' // named color
+);
+
+function showSuccess() {
+  // no animation yet in this code
+  if (frameCount % (T6_CORRECT / 12) == 0) {
+    showButtons();
+    showLeds(successColors);
+  }
+}
+
+var failColors = new Array(
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'red' // named color
+);
+
+function showFailure() {
+  // no animation yet in this code
+  if (frameCount % (T7_INCORRECT / 12) == 0) {
+    showButtons();
+    showLeds(failColors);
+  }
+}
+
+var countColors = new Array(
+  'teal', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black' // named color
+);
+
+function showCountdown() {
+  if (frameCount % (T4_COUNTDOWN / 12) == 0) {
+    showButtons();
+    showLeds(countColors);
+    countColors.rotateRight(-1);
+  }
+}
+
+var blokColors = new Array(
+  'red', // named color
+  'red', // named color
+  'red', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black', // named color
+  'black' // named color
+);
+
+// Display phase text
+
+
+function handleTutorial() {
+  background(10); // Clear the screen
+  showButtons(); // Show the buttons
+
+  // Scale the text size based on the screen size
+  let textScale = min(windowWidth, windowHeight) * 0.03; // 3% of the smaller dimension
+  textSize(textScale);
+
+  // Display all tutorial instructions on one screen
+  fill("white");
+  textAlign(LEFT, TOP);
+
+  let tutorialText = `
+    Welcome to the Donald Remembering Game!
+    
+    1. The goal is to remember and repeat the sequence of blue lights.
+    2. Watch the lights carefully as they light up in a sequence.
+    3. When the lights are teal coloured, it's your turn, tap the buttons in the same order.
+    4. If you get it right, the sequence gets longer!
+    5. If you make a mistake, you'll have to restart.
+    6. Good luck and have fun!
+    
+    Tap anywhere to start the game.
+  `;
+
+  // Display the text within a bounding box
+  text(tutorialText, 50, 50, windowWidth - 100, windowHeight - 100);
+}
+
+
+
+// Increment tutorial step on user interaction
+function touchEnded() {
+  if (showTutorial) {
+    showTutorial = false; // End the tutorial
+    changeState(0); // Transition to idle state
+  } 
+}
